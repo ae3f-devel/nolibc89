@@ -48,4 +48,4 @@ target_link_libraries(
 	PUBLIC	ae2f::Core
 	)
 
-target_compile_options(ae3f-nolibc89-syscall	BEFORE PRIVATE "-ffreestanding" "-nostdlib" "-fno-stack-protector")
+target_compile_options(ae3f-nolibc89-syscall	BEFORE PRIVATE "-ffreestanding" "-nostdlib" "-fno-stack-protector" "-Wno-error")
