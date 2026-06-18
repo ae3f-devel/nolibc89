@@ -1,19 +1,9 @@
-#define	NOLIBC_NO_RUNTIME
+#define NOLIBC_NO_RUNTIME
+#include <nolibc/stddef.h>
+#include <nolibc/arch.h>
 
 #include <ae2f/cc/profiles.h>
-#if	_ae2f_gnuc(!)0 || _ae2f_clang(!)0
-#define NOLIBC89	1
-#else
-#define	NOLIBC89	0
-#endif
-
-#if	!NOLIBC89
-typedef int NOLIBC89_CANNOT_COMPILE[-1];
-#endif
-
-#include <nolibc89_syscall.h>
-#include <stddef.h>
-#include <nolibc/arch.h>
+#include <nolibc89/syscall.h>
 
 #define	wrd_t	nolibc89_wrd_t
 

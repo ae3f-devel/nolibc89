@@ -5,7 +5,7 @@
 #include <ae2f/Cxx/extern.h>
 
 #ifndef	nolibc89_wrd_t
-typedef	intmax_t nolibc89_wrd_t;
+typedef intmax_t nolibc89_wrd_t;
 #define	nolibc89_wrd_t	nolibc89_wrd_t
 #endif
 
