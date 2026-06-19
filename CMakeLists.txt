@@ -44,8 +44,8 @@ add_library(ae3f::nolibc89 ALIAS ae3f-nolibc89-common)
 
 target_include_directories(
 	ae3f-nolibc89-common
-	INTERFACE	${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include
-	INTERFACE	${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include/nolibc
+	INTERFACE	$<BUILD_INTERFACE:${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include>
+	INTERFACE	$<BUILD_INTERFACE:${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include/nolibc>
 	)
 
 target_link_libraries(
