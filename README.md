@@ -9,3 +9,20 @@
 
 - this library is a c89 wrapper of nolibc from linux tool's nolib.
 > see: https://github.com/torvalds/linux/tree/master/tools/include/nolibc
+
+
+this repository supports following architecture which follows nolibc's supported architectures.
+
+- arm
+- arm64
+- loongarch
+- m68k
+- mips
+- openrisc
+- parisc
+- powerpc
+- riscv
+- s390
+- sh
+- sparc
+- x86

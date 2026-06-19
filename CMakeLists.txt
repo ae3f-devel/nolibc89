@@ -56,10 +56,13 @@ target_link_libraries(
 
 macro(mknolibc89 name)
 	if(LINUX)
+		file(GLOB_RECURSE source ${PROJECT_SOURCE_DIR}/lib/${name}/*)
+
 		ae2f_CoreLibTentConfigCustom(
 			${name} STATIC inc nolibc89
 			${PROJECT_SOURCE_DIR}/cfg/syscall.cmake.in
 			lib/${name}.c
+			${source}
 			)
 		target_link_libraries(nolibc89-${name} PRIVATE ae3f::nolibc89-common)
 		target_compile_options(nolibc89-${name}	BEFORE PRIVATE "-ffreestanding" "-nostdlib" "-fno-stack-protector" "-Wno-error")
@@ -79,5 +82,7 @@ macro(mknolibc89 name)
 	endif()
 endmacro()
 
+# list of supports
 mknolibc89(syscall)
 mknolibc89(crt)
+mknolibc89(clone)
