@@ -38,7 +38,7 @@
  */
 __attribute__((naked)) int nolibc89_clone3_td(
 		void* const rd_clone_args,
-		size_t c_sz_clone_args,
+		ae2f_size_t c_sz_clone_args,
 		nolibc89_tdentry_t* fn,
 		void* h_fnarg) {
 	__asm__ volatile (

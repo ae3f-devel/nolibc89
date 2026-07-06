@@ -9,6 +9,11 @@ typedef intmax_t nolibc89_wrd_t;
 #define	nolibc89_wrd_t	nolibc89_wrd_t
 #endif
 
+#include <ae2f/Cast.h>
+
+#define	nolibc89_castwrd_r(a)	ae2f_reinterpret_cast(nolibc89_wrd_t, (a))
+#define	nolibc89_castwrd_s(a)	ae2f_static_cast(nolibc89_wrd_t, (a))
+
 ae2f_extern nolibc89_wrd_t nolibc89_syscall0(nolibc89_wrd_t c0);
 ae2f_extern nolibc89_wrd_t nolibc89_syscall1(
 		nolibc89_wrd_t c0,
