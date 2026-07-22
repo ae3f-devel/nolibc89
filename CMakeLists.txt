@@ -26,7 +26,7 @@ if(NOT TARGET ae2f::Preproc)
 	add_subdirectory(${ae2f_Preproc_Wh} ${ae2f_submod}/ae2f/Preproc)
 endif()
 
-if(NOT EXISTS ${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux)
+if(NOT EXISTS ${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux AND LINUX)
 	execute_process(
 		COMMAND git clone https://github.com/torvalds/linux
 		${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux --depth 1
@@ -42,11 +42,13 @@ ae2f_CoreLibTentConfigCustom(
 
 add_library(ae3f::nolibc89 ALIAS ae3f-nolibc89-common)
 
-target_include_directories(
-	ae3f-nolibc89-common
-	INTERFACE	$<BUILD_INTERFACE:${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include>
-	INTERFACE	$<BUILD_INTERFACE:${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include/nolibc>
-	)
+if(LINUX)
+	target_include_directories(
+		ae3f-nolibc89-common
+		INTERFACE	$<BUILD_INTERFACE:${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include>
+		INTERFACE	$<BUILD_INTERFACE:${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include/nolibc>
+		)
+endif()
 
 target_link_libraries(
 	ae3f-nolibc89-common
@@ -54,27 +56,37 @@ target_link_libraries(
 	)
 
 
-macro(mknolibc89 name)
-	if(LINUX)
-		file(GLOB_RECURSE source ${PROJECT_SOURCE_DIR}/lib/${name}/*)
-
+macro(mknolibc89 name os)
+	if(${os})
+		file(GLOB_RECURSE source ${PROJECT_SOURCE_DIR}/lib/${os}/${name}/*)
+		file(GLOB_RECURSE source_c ${PROJECT_SOURCE_DIR}/lib/${os}/${name}.c)
 		ae2f_CoreLibTentConfigCustom(
-			${name} STATIC inc nolibc89
+			${name} STATIC inc nolibc89-${os}
 			${PROJECT_SOURCE_DIR}/cfg/syscall.cmake.in
-			lib/${name}.c
 			${source}
+			${source_c}
 			)
-		target_link_libraries(nolibc89-${name} PRIVATE ae3f::nolibc89-common)
-		target_compile_options(nolibc89-${name}	BEFORE PRIVATE "-ffreestanding" "-nostdlib" "-fno-stack-protector" "-Wno-error")
-		target_link_options(nolibc89-${name}	PRIVATE "-ffreestanding" "-nostdlib" "-fno-stack-protector" "-Wno-error")
+		target_link_libraries(nolibc89-${os}-${name}	PRIVATE
+			ae3f::nolibc89-common)
+		target_compile_options(nolibc89-${os}-${name}	BEFORE PRIVATE
+			"-ffreestanding" "-nostdlib" "-fno-stack-protector" "-Wno-error")
+		target_link_options(nolibc89-${os}-${name}	PRIVATE
+			"-ffreestanding" "-nostdlib" "-fno-stack-protector" "-Wno-error")
 		if(OFF)
-			set_target_properties(nolibc89-${name} PROPERTIES
+			set_target_properties(nolibc89-${os}-${name} PROPERTIES
 				C_STANDARD 11
 				C_STANDARD_REQUIRED ON
 				C_EXTENSIONS ON
 				)
 		endif()
-	else()
+
+		add_library(nolibc89::${os}::${name}	ALIAS nolibc89-${os}-${name})
+		add_library(nolibc89::${name}		ALIAS nolibc89-${os}-${name})
+	endif()
+endmacro()
+
+macro(fallnolibc89 name)
+	if(NOT TARGET nolibc89::${name})
 		ae2f_CoreLibTentConfigCustom(
 			${name} INTERFACE inc nolibc89
 			${PROJECT_SOURCE_DIR}/cfg/syscall.cmake.in
@@ -82,7 +94,15 @@ macro(mknolibc89 name)
 	endif()
 endmacro()
 
+macro(cfgnolibc89 name)
+	foreach(arg IN LISTS ARGN)
+		mknolibc89(${name} ${arg})
+	endforeach()
+
+	fallnolibc89(${name})
+endmacro()
+
 # list of supports
-mknolibc89(syscall)
-mknolibc89(crt)
-mknolibc89(clone)
+cfgnolibc89(syscall	LINUX)
+cfgnolibc89(crt		WIN32 LINUX)
+cfgnolibc89(clone	LINUX)
