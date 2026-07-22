@@ -26,13 +26,6 @@ if(NOT TARGET ae2f::Preproc)
 	add_subdirectory(${ae2f_Preproc_Wh} ${ae2f_submod}/ae2f/Preproc)
 endif()
 
-if(NOT EXISTS ${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux AND LINUX)
-	execute_process(
-		COMMAND git clone https://github.com/torvalds/linux
-		${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux --depth 1
-		)
-endif()
-
 ae2f_CoreLibFetch(ae2f Core main)
 
 ae2f_CoreLibTentConfigCustom(
@@ -43,6 +36,13 @@ ae2f_CoreLibTentConfigCustom(
 add_library(ae3f::nolibc89 ALIAS ae3f-nolibc89-common)
 
 if(LINUX)
+	if(NOT EXISTS ${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux)
+		execute_process(
+			COMMAND git clone https://github.com/torvalds/linux
+			${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux --depth 1
+			)
+	endif()
+
 	target_include_directories(
 		ae3f-nolibc89-common
 		INTERFACE	$<BUILD_INTERFACE:${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include>
@@ -60,6 +60,13 @@ macro(mknolibc89 name os)
 	if(${os})
 		file(GLOB_RECURSE source ${PROJECT_SOURCE_DIR}/lib/${os}/${name}/*)
 		file(GLOB_RECURSE source_c ${PROJECT_SOURCE_DIR}/lib/${os}/${name}.c)
+
+		message(STATUS "\n"
+			"nolibc89::${os}::${name}\n"
+			"${source}\n"
+			"${source_c}"
+			)
+
 		ae2f_CoreLibTentConfigCustom(
 			${name} STATIC inc nolibc89-${os}
 			${PROJECT_SOURCE_DIR}/cfg/syscall.cmake.in
@@ -95,7 +102,7 @@ macro(fallnolibc89 name)
 endmacro()
 
 macro(cfgnolibc89 name)
-	foreach(arg IN LISTS ARGN)
+	foreach(arg ${ARGN})
 		mknolibc89(${name} ${arg})
 	endforeach()
 
