@@ -90,6 +90,8 @@ macro(mknolibc89 name os)
 
 		add_library(nolibc89::${os}::${name}	ALIAS nolibc89-${os}-${name})
 		add_library(nolibc89::${name}		ALIAS nolibc89-${os}-${name})
+
+		target_link_libraries(nolibc89-${os}-${name} INTERFACE ae3f-nolibc89-common)
 	endif()
 endmacro()
 
@@ -103,6 +105,8 @@ macro(fallnolibc89 name)
 			${PROJECT_SOURCE_DIR}/cfg/syscall.cmake.in
 			${source} ${source_c}
 			)
+
+		target_link_libraries(nolibc89-${name} INTERFACE ae3f-nolibc89-common)
 	endif()
 endmacro()
 
