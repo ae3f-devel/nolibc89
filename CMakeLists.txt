@@ -42,12 +42,6 @@ if(LINUX)
 			${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux --depth 1
 			)
 	endif()
-
-	target_include_directories(
-		ae3f-nolibc89-common
-		INTERFACE	$<BUILD_INTERFACE:${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include>
-		INTERFACE	$<BUILD_INTERFACE:${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include/nolibc>
-		)
 endif()
 
 target_link_libraries(
@@ -92,6 +86,14 @@ macro(mknolibc89 name os)
 		add_library(nolibc89::${name}		ALIAS nolibc89-${os}-${name})
 
 		target_link_libraries(nolibc89-${os}-${name} INTERFACE ae3f-nolibc89-common)
+
+		if(LINUX)
+			target_include_directories(
+				nolibc89-${os}-${name}
+				PRIVATE	$<BUILD_INTERFACE:${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include>
+				PRIVATE	$<BUILD_INTERFACE:${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include/nolibc>
+				)
+		endif()
 	endif()
 endmacro()
 
