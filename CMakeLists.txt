@@ -68,11 +68,12 @@ macro(mknolibc89 name os)
 			)
 
 		ae2f_CoreLibTentConfigCustom(
-			${name} STATIC inc nolibc89-${os}
+			${name} STATIC inc2/${os}/ nolibc89-${os}
 			${PROJECT_SOURCE_DIR}/cfg/syscall.cmake.in
 			${source}
 			${source_c}
 			)
+
 		target_link_libraries(nolibc89-${os}-${name}	PRIVATE
 			ae3f::nolibc89-common)
 		target_compile_options(nolibc89-${os}-${name}	BEFORE PRIVATE
@@ -94,9 +95,13 @@ endmacro()
 
 macro(fallnolibc89 name)
 	if(NOT TARGET nolibc89::${name})
+		file(GLOB_RECURSE source ${PROJECT_SOURCE_DIR}/lib/POSIX/${name}/*)
+		file(GLOB_RECURSE source_c ${PROJECT_SOURCE_DIR}/lib/POSIX/${name}.c)
+
 		ae2f_CoreLibTentConfigCustom(
-			${name} INTERFACE inc nolibc89
+			${name} INTERFACE inc2/POSIX nolibc89
 			${PROJECT_SOURCE_DIR}/cfg/syscall.cmake.in
+			${source} ${source_c}
 			)
 	endif()
 endmacro()
@@ -113,3 +118,4 @@ endmacro()
 cfgnolibc89(syscall	LINUX)
 cfgnolibc89(crt		WIN32 LINUX)
 cfgnolibc89(clone	LINUX)
+cfgnolibc89(futex)
