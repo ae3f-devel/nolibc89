@@ -49,11 +49,16 @@ target_link_libraries(
 	INTERFACE	ae2f::Core
 	)
 
-
-macro(mknolibc89 name os)
+function(mknolibc89 name os)
 	if(${os})
 		file(GLOB_RECURSE source ${PROJECT_SOURCE_DIR}/lib/${os}/${name}/*)
-		file(GLOB_RECURSE source_c ${PROJECT_SOURCE_DIR}/lib/${os}/${name}.c)
+
+
+		if(EXISTS ${PROJECT_SOURCE_DIR}/lib/${os}/${name}.c)
+			set(source_c ${PROJECT_SOURCE_DIR}/lib/${os}/${name}.c)
+		else()
+			set(source_c )
+		endif()
 
 		message(STATUS "\n"
 			"nolibc89::${os}::${name}\n"
@@ -66,6 +71,7 @@ macro(mknolibc89 name os)
 			${PROJECT_SOURCE_DIR}/cfg/syscall.cmake.in
 			${source}
 			${source_c}
+			lib/dummy.c
 			)
 
 		target_link_libraries(nolibc89-${os}-${name}	PRIVATE
@@ -74,6 +80,7 @@ macro(mknolibc89 name os)
 			"-ffreestanding" "-nostdlib" "-fno-stack-protector" "-Wno-error")
 		target_link_options(nolibc89-${os}-${name}	PRIVATE
 			"-ffreestanding" "-nostdlib" "-fno-stack-protector" "-Wno-error")
+
 		if(OFF)
 			set_target_properties(nolibc89-${os}-${name} PROPERTIES
 				C_STANDARD 11
@@ -85,7 +92,7 @@ macro(mknolibc89 name os)
 		add_library(nolibc89::${os}::${name}	ALIAS nolibc89-${os}-${name})
 		add_library(nolibc89::${name}		ALIAS nolibc89-${os}-${name})
 
-		target_link_libraries(nolibc89-${os}-${name} INTERFACE ae3f-nolibc89-common)
+		target_link_libraries(nolibc89-${os}-${name} PUBLIC ae3f-nolibc89-common)
 
 		if(LINUX)
 			target_include_directories(
@@ -95,7 +102,7 @@ macro(mknolibc89 name os)
 				)
 		endif()
 	endif()
-endmacro()
+endfunction()
 
 macro(fallnolibc89 name)
 	if(NOT TARGET nolibc89::${name})
@@ -103,12 +110,14 @@ macro(fallnolibc89 name)
 		file(GLOB_RECURSE source_c ${PROJECT_SOURCE_DIR}/lib/POSIX/${name}.c)
 
 		ae2f_CoreLibTentConfigCustom(
-			${name} INTERFACE inc2/POSIX nolibc89
+			POSIX-${name} STATIC inc2/POSIX nolibc89
 			${PROJECT_SOURCE_DIR}/cfg/syscall.cmake.in
-			${source} ${source_c}
+			${source} ${source_c} lib/dummy.c
 			)
 
-		target_link_libraries(nolibc89-${name} INTERFACE ae3f-nolibc89-common)
+		target_link_libraries(nolibc89-POSIX-${name} PUBLIC ae3f-nolibc89-common)
+
+		add_library(nolibc89::${name} ALIAS nolibc89-POSIX-${name})
 	endif()
 endmacro()
 
