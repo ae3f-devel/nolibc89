@@ -9,7 +9,6 @@ typedef	ae2f_size_t size_t;
 #include <nolibc89/syscall.h>
 
 #define	wrd_t	nolibc89_wrd_t
-
 #define	NULL	0
 
 wrd_t	nolibc89_syscall0(wrd_t c0) {
