@@ -75,8 +75,6 @@ function(mknolibc89 name os)
 			-DCMAKE_BUILD_TYPE=Release
 			-DTAR_NAME=${name}
 			-DTAR_OS=${os}
-			-DCMAKE_SHARED_LIBRARY_PREFIX=""
-			-DCMAKE_STATIC_LIBRARY_PREFIX=""
 			-DCMAKE_TOOLCHAIN_FILE=${PROJECT_SOURCE_DIR}/cfg/unify.cmake
 			)
 
@@ -157,5 +155,3 @@ cfgnolibc89(syscall	LINUX)
 cfgnolibc89(crt		WIN32 LINUX)
 cfgnolibc89(clone	LINUX)
 cfgnolibc89(futex	WIN32 LINUX)
-
-

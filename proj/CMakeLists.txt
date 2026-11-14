@@ -33,3 +33,12 @@ file(GLOB_RECURSE source_c ${PROJECT_SOURCE_DIR}/lib/${TAR_OS}/${TAR_NAME}.c)
 add_library(tar ${source} ${source_c})
 target_include_directories(tar PRIVATE ../inc inc/${TAR_OS})
 target_link_libraries(tar PRIVATE ae2f::Core)
+
+set_target_properties(tar PROPERTIES 
+    PREFIX ""
+    OUTPUT_NAME tar
+)
+
+if(LINUX)
+	target_include_directories(tar PRIVATE ${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include/)
+endif()
