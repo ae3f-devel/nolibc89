@@ -3,7 +3,7 @@
 #include <ae2f/cc/qualifier.h>
 #include <ae2f/cc/branches/naive.h>
 
-extern int main(int c_argc, char* ae2f_restrict * ae2f_restrict rd_argv);
+extern int main(int c_argc, char* rd_argv[]);
 
 enum {
 	R_GOOD,
@@ -19,7 +19,7 @@ ae2f_stdcall void mainCRTStartup(void) {
 #define	retval(c)	{ ret = (UINT)(c); goto END; }
 	int argc = 0;
 	LPWSTR* argvW = 0;
-	char* ae2f_restrict * ae2f_restrict argvA = 0;
+	char** argvA = 0;
 	int i = 0;
 	UINT ret = R_GOOD;
 
@@ -27,7 +27,7 @@ ae2f_stdcall void mainCRTStartup(void) {
 	ae2f_ifezerr(argvW)		retval(-R_CMD_ARGV_W);
 	ae2f_ifnezerr_strict(argc < 0)	retval(-R_CMD_ARGV_W);
 
-	ae2f_ifezerr((argvA = (char* ae2f_restrict * ae2f_restrict)LocalAlloc(
+	ae2f_ifezerr((argvA = (char**)LocalAlloc(
 					LPTR
 					, argc * sizeof(char*))
 				))

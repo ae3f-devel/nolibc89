@@ -1,39 +1,36 @@
-cmake_minimum_required(VERSION 3.25)
-enable_testing()
+cmake_minimum_required(VERSION 3.10)
+project(nolibc89 VERSION 0)
+
+set(nolibc89_cc clang CACHE STRING "c compiler")
 
 set(ae2f_ProjRoot ${CMAKE_CURRENT_SOURCE_DIR} CACHE STRING "Tree root for project")
 set(ae2f_BinRoot ${CMAKE_CURRENT_BINARY_DIR} CACHE STRING "Tree root for project")
 set(ae2f_submod  .submod CACHE STRING "Relative path to submodule (subdirectory)")
-set(ae2f_Preproc_Wh ${ae2f_ProjRoot}/${ae2f_submod}/ae2f/Preproc)
 option(ae2f_TEST	ON ON)
 
-project(nolibc89 VERSION 0)
+set(SUB_BIN ${PROJECT_BINARY_DIR}/nolibc89-sub)
 
-if(TARGET ae3f-nolibc89-common)
+if(TARGET nolibc89::common)
 	return()
 endif()
 
-# Execute git to fetch CoreScript when repository does not exist
-if(NOT EXISTS ${ae2f_Preproc_Wh})
+set(ae2f_CoreScript_Wh ${ae2f_ProjRoot}/${ae2f_submod}/ae2f/CoreScript)
+if(NOT EXISTS ${ae2f_CoreScript_Wh})
 	execute_process(
-		COMMAND git clone https://talkischeap.work.gd/ae2f/Preproc
-		${ae2f_Preproc_Wh} --depth 1
+		COMMAND git clone https://talkischeap.work.gd/ae2f/CoreScript
+		${ae2f_CoreScript_Wh} --depth 1
 		)
 endif()
 
 # add subdirectory
-if(NOT TARGET ae2f::Preproc)
-	add_subdirectory(${ae2f_Preproc_Wh} ${ae2f_submod}/ae2f/Preproc)
+if(NOT TARGET ae2f::CoreScript)
+	add_subdirectory(${ae2f_CoreScript_Wh} ${ae2f_submod}/ae2f/CoreScript)
 endif()
 
-ae2f_CoreLibFetch(ae2f Core main)
-
 ae2f_CoreLibTentConfigCustom(
-	nolibc89-common INTERFACE inc ae3f
+	common INTERFACE inc nolibc89
 	${PROJECT_SOURCE_DIR}/cfg/syscall.cmake.in
 	)
-
-add_library(ae3f::nolibc89 ALIAS ae3f-nolibc89-common)
 
 if(LINUX)
 	if(NOT EXISTS ${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux)
@@ -44,80 +41,100 @@ if(LINUX)
 	endif()
 endif()
 
-target_link_libraries(
-	ae3f-nolibc89-common
-	INTERFACE	ae2f::Core
-	)
-
+include(ExternalProject)
 function(mknolibc89 name os)
+	if(TARGET nolibc89::${name})
+		return()
+	endif()
+
 	if(${os})
-		file(GLOB_RECURSE source ${PROJECT_SOURCE_DIR}/lib/${os}/${name}/*)
+		file(GLOB_RECURSE source ${PROJECT_SOURCE_DIR}/proj/lib/${os}/${name}/*)
 
-
-		if(EXISTS ${PROJECT_SOURCE_DIR}/lib/${os}/${name}.c)
-			set(source_c ${PROJECT_SOURCE_DIR}/lib/${os}/${name}.c)
+		if(EXISTS ${PROJECT_SOURCE_DIR}/proj/lib/${os}/${name}.c)
+			set(source_c ${PROJECT_SOURCE_DIR}/proj/lib/${os}/${name}.c)
 		else()
 			set(source_c )
 		endif()
 
-		message(STATUS "\n"
-			"nolibc89::${os}::${name}\n"
-			"${source}\n"
-			"${source_c}"
+		set(SUB_BIN ${SUB_BIN}/${name}/${os})
+
+
+		add_custom_command(
+			DEPENDS			${PROJECT_SOURCE_DIR}/proj/CMakeLists.txt
+			OUTPUT			${SUB_BIN}/CMakeCache.txt
+			WORKING_DIRECTORY	${PROJECT_SOURCE_DIR}/proj
+			COMMAND
+			${CMAKE_COMMAND}
+			-S "."
+			-B "${SUB_BIN}"
+			-DCMAKE_C_COMPILER=${nolibc89_cc}
+			-Dae2f_ProjRoot=${ae2f_ProjRoot}
+			-Dae2f_submod=${ae2f_submod}
+			-Dae2f_host=${ae2f_host}
+			-Dae2f_TEST=${ae2f_TEST}
+			-DCMAKE_BUILD_TYPE=Release
+			-DTAR_NAME=${name}
+			-DTAR_OS=${os}
+			-DCMAKE_SHARED_LIBRARY_PREFIX=""
+			-DCMAKE_STATIC_LIBRARY_PREFIX=""
+			-DCMAKE_TOOLCHAIN_FILE=${PROJECT_SOURCE_DIR}/cfg/unify.cmake
 			)
 
-		ae2f_CoreLibTentConfigCustom(
-			${name} STATIC inc2/${os}/ nolibc89-${os}
+		add_custom_target(nolibc89-${name}-${os}-cfg DEPENDS ${SUB_BIN}/CMakeCache.txt)
+
+		add_custom_command(
+			OUTPUT			${SUB_BIN}/lib/Release/tar${CMAKE_STATIC_LIBRARY_SUFFIX}
+			WORKING_DIRECTORY	${SUB_BIN}
+			COMMAND			${CMAKE_COMMAND} --build . --config Release
+			DEPENDS			${SUB_BIN}/CMakeCache.txt nolibc89-${name}-${os}-cfg
+			)
+
+		add_custom_target(nolibc89-${name}-${os}-build
+			DEPENDS
+			${SUB_BIN}/lib/Release/tar${CMAKE_STATIC_LIBRARY_SUFFIX}
+			nolibc89-${name}-${os}-cfg
+			)
+
+		ae2f_CoreLibTentConfigCustomInterface(
+			${name} STATIC inc nolibc89
 			${PROJECT_SOURCE_DIR}/cfg/syscall.cmake.in
-			${source}
-			${source_c}
-			lib/dummy.c
+			IMPORTED GLOBAL
 			)
 
-		target_link_libraries(nolibc89-${os}-${name}	PRIVATE
-			ae3f::nolibc89-common)
-		target_compile_options(nolibc89-${os}-${name}	BEFORE PRIVATE
-			"-ffreestanding" "-nostdlib" "-fno-stack-protector" "-Wno-error")
-		target_link_options(nolibc89-${os}-${name}	PRIVATE
-			"-ffreestanding" "-nostdlib" "-fno-stack-protector" "-Wno-error")
+		set_target_properties(nolibc89-${name} PROPERTIES
+			IMPORTED_LOCATION_RELEASE	${SUB_BIN}/lib/Release/tar${CMAKE_STATIC_LIBRARY_SUFFIX}
+			IMPORTED_LOCATION		${SUB_BIN}/lib/Release/tar${CMAKE_STATIC_LIBRARY_SUFFIX}
+			IMPORTED_GLOBAL			TRUE
+			)
 
-		if(OFF)
-			set_target_properties(nolibc89-${os}-${name} PROPERTIES
-				C_STANDARD 11
-				C_STANDARD_REQUIRED ON
-				C_EXTENSIONS ON
-				)
-		endif()
+		target_include_directories(
+			nolibc89-${name}
+			INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/>
+			INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/proj/inc/${os}>
+			)
 
-		add_library(nolibc89::${os}::${name}	ALIAS nolibc89-${os}-${name})
-		add_library(nolibc89::${name}		ALIAS nolibc89-${os}-${name})
+		target_link_libraries(nolibc89-${name}
+			INTERFACE ae2f::Core
+			INTERFACE nolibc89::common
+			)
 
-		target_link_libraries(nolibc89-${os}-${name} PUBLIC ae3f-nolibc89-common)
-
-		if(LINUX)
-			target_include_directories(
-				nolibc89-${os}-${name}
-				PRIVATE	$<BUILD_INTERFACE:${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include>
-				PRIVATE	$<BUILD_INTERFACE:${ae2f_ProjRoot}/${ae2f_submod}/torvalds/linux/tools/include/nolibc>
-				)
-		endif()
+		add_dependencies(nolibc89-${name} nolibc89-${name}-${os}-build)
 	endif()
 endfunction()
 
 macro(fallnolibc89 name)
 	if(NOT TARGET nolibc89::${name})
-		file(GLOB_RECURSE source ${PROJECT_SOURCE_DIR}/lib/POSIX/${name}/*)
-		file(GLOB_RECURSE source_c ${PROJECT_SOURCE_DIR}/lib/POSIX/${name}.c)
+		file(GLOB_RECURSE source ${PROJECT_SOURCE_DIR}/proj/lib/POSIX/${name}/*)
+		file(GLOB_RECURSE source_c ${PROJECT_SOURCE_DIR}/proj/lib/POSIX/${name}.c)
 
 		ae2f_CoreLibTentConfigCustom(
-			POSIX-${name} STATIC inc2/POSIX nolibc89
+			${name}-POSIX STATIC proj/inc/POSIX nolibc89
 			${PROJECT_SOURCE_DIR}/cfg/syscall.cmake.in
-			${source} ${source_c} lib/dummy.c
+			${source} ${source_c} proj/lib/dummy.c
 			)
 
-		target_link_libraries(nolibc89-POSIX-${name} PUBLIC ae3f-nolibc89-common)
-
-		add_library(nolibc89::${name} ALIAS nolibc89-POSIX-${name})
+		target_link_libraries(nolibc89-${name}-POSIX PUBLIC nolibc89::common)
+		add_library(nolibc89::${name} ALIAS nolibc89-${name}-POSIX)
 	endif()
 endmacro()
 
@@ -127,6 +144,12 @@ macro(cfgnolibc89 name)
 	endforeach()
 
 	fallnolibc89(${name})
+
+	if(NOT TARGET nolibc89::${name})
+		message(FATAL_ERROR "nolibc89::${name}")
+	else()
+		message(STATUS "nolibc89::${name}")
+	endif()
 endmacro()
 
 # list of supports
@@ -134,3 +157,5 @@ cfgnolibc89(syscall	LINUX)
 cfgnolibc89(crt		WIN32 LINUX)
 cfgnolibc89(clone	LINUX)
 cfgnolibc89(futex	WIN32 LINUX)
+
+
