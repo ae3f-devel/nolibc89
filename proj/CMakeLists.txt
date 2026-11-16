@@ -36,6 +36,7 @@ target_link_libraries(tar PRIVATE ae2f::Core)
 
 set_target_properties(tar PROPERTIES 
     PREFIX ""
+    SUFFIX ""
     OUTPUT_NAME tar
 )
 

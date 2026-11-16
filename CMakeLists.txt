@@ -81,7 +81,7 @@ function(mknolibc89 name os)
 		add_custom_target(nolibc89-${name}-${os}-cfg DEPENDS ${SUB_BIN}/CMakeCache.txt)
 
 		add_custom_command(
-			OUTPUT			${SUB_BIN}/lib/Release/tar${CMAKE_STATIC_LIBRARY_SUFFIX}
+			OUTPUT			${SUB_BIN}/lib/Release/tar
 			WORKING_DIRECTORY	${SUB_BIN}
 			COMMAND			${CMAKE_COMMAND} --build . --config Release
 			DEPENDS			${SUB_BIN}/CMakeCache.txt nolibc89-${name}-${os}-cfg
@@ -89,7 +89,7 @@ function(mknolibc89 name os)
 
 		add_custom_target(nolibc89-${name}-${os}-build
 			DEPENDS
-			${SUB_BIN}/lib/Release/tar${CMAKE_STATIC_LIBRARY_SUFFIX}
+			${SUB_BIN}/lib/Release/tar
 			nolibc89-${name}-${os}-cfg
 			)
 
@@ -100,8 +100,8 @@ function(mknolibc89 name os)
 			)
 
 		set_target_properties(nolibc89-${name} PROPERTIES
-			IMPORTED_LOCATION_RELEASE	${SUB_BIN}/lib/Release/tar${CMAKE_STATIC_LIBRARY_SUFFIX}
-			IMPORTED_LOCATION		${SUB_BIN}/lib/Release/tar${CMAKE_STATIC_LIBRARY_SUFFIX}
+			IMPORTED_LOCATION_RELEASE	${SUB_BIN}/lib/Release/tar
+			IMPORTED_LOCATION		${SUB_BIN}/lib/Release/tar
 			IMPORTED_GLOBAL			TRUE
 			)
 
