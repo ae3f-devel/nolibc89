@@ -98,7 +98,7 @@ function(mknolibc89 name os)
 		add_custom_command(
 			OUTPUT			${path_baked}
 			WORKING_DIRECTORY	${SUB_BIN}
-			COMMAND			${CMAKE_COMMAND} -E rename ${SUB_BIN}/lib/Release/tar ${path_baked}
+			COMMAND			${CMAKE_COMMAND} -E copy ${SUB_BIN}/lib/Release/tar ${path_baked}
 			DEPENDS			${SUB_BIN}/lib/Release/tar nolibc89-${name}-${os}-build
 			)
 
