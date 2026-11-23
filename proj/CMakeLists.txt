@@ -28,10 +28,10 @@ ae2f_CoreLibFetch(ae2f Core main)
 
 
 file(GLOB_RECURSE source ${PROJECT_SOURCE_DIR}/lib/${TAR_OS}/${TAR_NAME}/*)
-file(GLOB_RECURSE source_c ${PROJECT_SOURCE_DIR}/lib/${TAR_OS}/${TAR_NAME}.c)
+file(GLOB_RECURSE source_c ${PROJECT_SOURCE_DIR}/lib/${TAR_OS}/${TAR_NAME}.c*)
 
 add_library(tar ${source} ${source_c})
-target_include_directories(tar PRIVATE ../inc inc/${TAR_OS})
+target_include_directories(tar PUBLIC ../inc ./inc/${TAR_OS})
 target_link_libraries(tar PRIVATE ae2f::Core)
 
 set_target_properties(tar PROPERTIES 

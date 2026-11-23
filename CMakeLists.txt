@@ -93,6 +93,17 @@ function(mknolibc89 name os)
 			nolibc89-${name}-${os}-cfg
 			)
 
+		set(path_baked ${SUB_BIN}/lib/Release/${CMAKE_STATIC_LIBRARY_PREFIX}tar${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+		add_custom_command(
+			OUTPUT			${path_baked}
+			WORKING_DIRECTORY	${SUB_BIN}
+			COMMAND			${CMAKE_COMMAND} -E rename ${SUB_BIN}/lib/Release/tar ${path_baked}
+			DEPENDS			${SUB_BIN}/lib/Release/tar nolibc89-${name}-${os}-build
+			)
+
+		add_custom_target(nolibc89-${name}-${os}-mv DEPENDS ${path_baked} nolibc89-${name}-${os}-build)
+
 		ae2f_CoreLibTentConfigCustomInterface(
 			${name} STATIC inc nolibc89
 			${PROJECT_SOURCE_DIR}/cfg/syscall.cmake.in
@@ -100,8 +111,8 @@ function(mknolibc89 name os)
 			)
 
 		set_target_properties(nolibc89-${name} PROPERTIES
-			IMPORTED_LOCATION_RELEASE	${SUB_BIN}/lib/Release/tar
-			IMPORTED_LOCATION		${SUB_BIN}/lib/Release/tar
+			IMPORTED_LOCATION_RELEASE	${path_baked}
+			IMPORTED_LOCATION		${path_baked}
 			IMPORTED_GLOBAL			TRUE
 			)
 
@@ -116,7 +127,7 @@ function(mknolibc89 name os)
 			INTERFACE nolibc89::common
 			)
 
-		add_dependencies(nolibc89-${name} nolibc89-${name}-${os}-build)
+		add_dependencies(nolibc89-${name} nolibc89-${name}-${os}-mv)
 	endif()
 endfunction()
 
